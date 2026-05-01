@@ -1,3 +1,31 @@
+## TOUSE
+C# /
+SQLite /
+ORM /
+Swagger documentation (Is just documentation formatted in JSON / YAML)
+
+## TODO
+Essentially need a link to GET/POST when want stuff:
+1. Filter by Free-Parking (free_parking != 'NO')
+2. Filter by Night-Parking (night_parking == 'YES')
+3. Filter by gantry_height > vehicle height (input)
+
+ERD
+1. Change CARPARK -> FREE_SESSION to 0 : m (from having free parking to none)
+2. Change all the connector IDs to use the car_park_no instead
+
+Batch:
+1. Have a local csv with stuff in it
+2. Daily, update database based on the csv (#actually, this may not be required (like the python job I wrote for the crontab))
+3. IFERR, dont update the db
+
+## Optionals
+1. Large size so prob reading whole file is unideal, need to find way to identify changes
+2. Minimal human job recovery, the thing should work by smtg ez like restarting
+3. Security, lets not send stuff unencrypted
+4. API auth, like SQLCon with API key / user & pwd
+
+
 # Carpark-Info
 A take-home coding assignment for backend developer interview. 
 
