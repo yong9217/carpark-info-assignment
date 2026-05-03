@@ -11,3 +11,5 @@ var blog = await db.SYSTEM
     .FirstAsync();
 
 Console.WriteLine(blog.system_name);
+
+ParseCSV.ReadFile("testSection.csv");
