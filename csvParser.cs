@@ -92,7 +92,7 @@ class TimeRange
 
 class ParseCSV
 {
-    public static void ReadFile(string path)
+    public static List<Lot> ReadFile(string path)
     {
         path = "../../../" + path;
 
@@ -106,22 +106,6 @@ class ParseCSV
         foreach (var line in lines)
         {
             var cols = line.Split(',');
-
-            // var lot = new RawLot
-            // {
-            //     car_park_no = cols[0],
-            //     address = cols[1],
-            //     x_coord = float.Parse(cols[2]),
-            //     y_coord = float.Parse(cols[3]),
-            //     car_park_type = cols[4],
-            //     type_of_parking_system = cols[5],
-            //     short_term_parking = cols[6],
-            //     free_parking = cols[7],
-            //     night_parking = cols[8],
-            //     car_park_decks = int.Parse(cols[9]),
-            //     gantry_height = float.Parse(cols[10]),
-            //     car_park_basement = cols[11],
-            // };
 
             try
             {
@@ -154,13 +138,11 @@ class ParseCSV
             {
                 Console.WriteLine("Error on line: " + line);
                 Console.WriteLine("Threw: " + e.Message);
+                return new List<Lot>{};
             }
         }
 
-        foreach (Lot x in allLots)
-        {
-            Console.WriteLine(x);
-        }
+        return allLots;
     }
 
     private static string PreProcessRaw(string t)

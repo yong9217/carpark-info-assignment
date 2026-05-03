@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("carpark-info-assignment")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+06844b9a8e98aafab115bac4f64f96b49bf1961b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+48dfd31bc1eb23ae5c47eb2582a8347107657343")]
 [assembly: System.Reflection.AssemblyProductAttribute("carpark-info-assignment")]
 [assembly: System.Reflection.AssemblyTitleAttribute("carpark-info-assignment")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

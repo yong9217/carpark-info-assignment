@@ -1,0 +1,31 @@
+CREATE TABLE SYSTEM(
+system_id INT PRIMARY KEY NOT NULL,
+system_name TEXT NOT NULL);
+CREATE TABLE TYPE(
+type_id INT PRIMARY KEY NOT NULL,
+type_name TEXT NOT NULL);
+CREATE TABLE CARPARK(
+car_park_no TEXT NOT NULL PRIMARY KEY,
+address TEXT NOT NULL,
+x_coord NUMERIC NOT NULL,
+y_coord NUMERIC NOT NULL,
+short_term_start TEXT NOT NULL,
+short_term_end TEXT NOT NULL,
+night_parking INT NOT NULL,
+decks INT NOT NULL,
+gantry_height NUMERIC NOT NULL,
+basement INT NOT NULL);
+CREATE TABLE CARPARK_MATCH_SYSTEM(
+car_park_no TEXT NOT NULL REFERENCES CARPARK(car_park_no),
+system_id INT NOT NULL REFERENCES SYSTEM(system_id),
+PRIMARY KEY (car_park_no, system_id));
+CREATE TABLE CARPARK_MATCH_TYPE(
+car_park_no TEXT NOT NULL REFERENCES CARPARK(car_park_no),
+type_id INT NOT NULL REFERENCES TYPE(type_id),
+PRIMARY KEY (car_park_no, type_id));
+CREATE TABLE FREE_PARK(
+free_park_instance_id INT PRIMARY KEY NOT NULL,
+car_park_no TEXT NOT NULL REFERENCES CARPARK(car_park_no),
+day INT NOT NULL,
+start_time TEXT NOT NULL,
+end_time TEXT NOT NULL);

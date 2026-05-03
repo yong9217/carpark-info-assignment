@@ -10,6 +10,6 @@ Console.WriteLine("Querying for a lot");
 var blog = await db.SYSTEM
     .FirstAsync();
 
-Console.WriteLine(blog.system_name);
+Console.WriteLine(blog.system_id);
 
 ParseCSV.ReadFile("testSection.csv");

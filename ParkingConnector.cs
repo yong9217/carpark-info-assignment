@@ -55,7 +55,7 @@ public class FreePark
 {
     [System.ComponentModel.DataAnnotations.Key]
     public int free_park_instance_id { get; set; }
-    public string car_park_no { get; set; }
+    public CarPark car_park_no { get; set; }
     public int day { get; set; }
     public string start_time { get; set; }
     public string end_time { get; set; }
