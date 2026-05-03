@@ -12,58 +12,67 @@ class DatabaseConnector
     public static async Task Main(string[] args)
     {
         DatabaseConnector con = new DatabaseConnector();
+        bool testCSVParser = true;
+        bool testCSVAdd = false;
 
-        // await con.db.Database.EnsureDeletedAsync(); 
+        if (testCSVParser)
+        {
+            if (testCSVAdd)
+            {
+                await con.db.Database.EnsureDeletedAsync();
+            }
+            
+            string path = "testSection.csv";
+            List<Lot> fromCSV = ParseCSV.ReadFile(path);
+
+            Console.WriteLine("Updating " + fromCSV.Count + " records from " + path + "...");
+            con.syncWithCSV(fromCSV);
+            Console.WriteLine("Done!");
+        }
         await con.db.Database.EnsureCreatedAsync();
 
-        // using (var trans = con.db.Database.BeginTransaction())
-        // {
-        //     con.addType("test1");
+        Console.WriteLine("Parking Lots with free parking:");
+        foreach (CarPark i in con.getFreeParking())
+        {
+            Console.WriteLine(i);
+        }
+        Console.WriteLine();
 
-        //     foreach (var item in con.db.TYPE)
-        //     {
-        //         Console.WriteLine(item.type_name);
-        //     }
+        Console.WriteLine("Parking Lots with night parking:");
+        foreach (CarPark i in con.getNightParking())
+        {
+            Console.WriteLine(i);
+        }
+        Console.WriteLine();
 
-        //     trans.Commit();
-        // }
-
-        string path = "testSection.csv";
-
-        List<Lot> fromCSV = ParseCSV.ReadFile(path);
-
-        Console.WriteLine("Updating " + fromCSV.Count + " records from " + path + "...");
-
-        con.syncWithCSV(fromCSV);
-
-        Console.WriteLine("Done!");
+        float height = 3.21F;
+        Console.WriteLine($"Parking Lots which vehicles of height {height} can enter:");
+        foreach (CarPark i in con.getMatchHeight(height))
+        {
+            Console.WriteLine(i);
+        }
+        Console.WriteLine();
     }
 
-    public void printFreeParking()
+    public CarPark[] getFreeParking()
     {
-        var res = db.FREE_PARK.Select(m => m.car_park_noFP.car_park_no).Distinct();
-        foreach (string item in res)
-        {
-            Console.WriteLine(item);
-        }
+        var res = db.CARPARK.Include(x => x.LotTypes).Include(y => y.ParkingSystems).Include(z => z.FreeParkingSessions).Where(z => z.FreeParkingSessions.Count > 0);
+
+        return res.ToArray();
     }
 
-    public void printNightParking()
+    public CarPark[] getNightParking()
     {
-        var res = db.CARPARK.Where(m => m.night_parking);
-        foreach (CarPark item in res)
-        {
-            Console.WriteLine(item.car_park_no);
-        }
+        var res = db.CARPARK.Include(x => x.LotTypes).Include(y => y.ParkingSystems).Include(z => z.FreeParkingSessions).Where(z => z.night_parking);
+
+        return res.ToArray();
     }
 
-    public void printMatchHeight(float h)
+    public CarPark[] getMatchHeight(float h)
     {
-        var res = db.CARPARK.Where(m => m.gantry_height < h);
-        foreach (CarPark item in res)
-        {
-            Console.WriteLine(item.car_park_no);
-        }
+        var res = db.CARPARK.Include(x => x.LotTypes).Include(y => y.ParkingSystems).Include(z => z.FreeParkingSessions).Where(z => z.gantry_height < h);
+
+        return res.ToArray();
     }
 
     public void printSystem()
