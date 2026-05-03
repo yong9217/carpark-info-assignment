@@ -16,8 +16,10 @@ public class ParkingContext : DbContext
         DbPath = "C:\\Users\\yong9\\Documents\\node\\carpark-info-assignment\\sqlite\\parkingTest.db";
     }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
-        => options.UseSqlite($"Data Source={DbPath}");
+    protected override void OnConfiguring(DbContextOptionsBuilder options){
+        options.UseSqlite($"Data Source={DbPath}");
+        options.EnableSensitiveDataLogging();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,7 +41,7 @@ public class CarPark
     public bool night_parking { get; set; }
     public int decks { get; set; }
     public float gantry_height { get; set; }
-    public int basement { get; set; }
+    public bool basement { get; set; }
 
     [ForeignKey("car_park_noFP")]
     public ICollection<FreePark> FreeParkingSessions { get; set; }
@@ -47,6 +49,39 @@ public class CarPark
     public ICollection<Sys> ParkingSystems { get; set; }
     [ForeignKey("type_id")]
     public ICollection<Typ> LotTypes { get; set; }
+
+    public override string ToString()
+    {
+        string output = $"[car_park_no: {this.car_park_no}, address: {this.address}, x_coord: {this.x_coord}, y_coord: {this.y_coord}, short_term_start: {this.short_term_start}, short_term_end: {this.short_term_end}, night_parking: {this.night_parking}, decks: {this.decks}, gantry_height: {this.gantry_height}, basement: {this.basement}, ";
+        
+        output = output + $"types: {ColToString<Typ>(this.LotTypes)}, systems: {ColToString<Sys>(this.ParkingSystems)}, free: {ColToString<FreePark>(this.FreeParkingSessions)}]";
+
+        return output;
+    }
+
+    private string ColToString<T>(ICollection<T> x)
+    {
+        if(x == null)
+        {
+            return "[]";
+        }
+
+        if(x.Count <= 0)
+        {
+            return "[]";
+        }
+
+        string output = "[";
+        foreach(var t in x)
+        {
+            output = output + (t == null ? "null" : t.ToString()) + ", ";
+        }
+        output = output.Remove(output.Length - 1).Remove(output.Length - 2);
+
+        output = output + "]";
+
+        return output;
+    }
 }
 
 public class Sys
@@ -55,6 +90,11 @@ public class Sys
     public int system_id { get; set; }
     public string system_name { get; set; }
     public ICollection<CarPark> conParksS { get; set; }
+
+    public override string ToString()
+    {
+        return "{id: " + system_id + ",name: " + system_name + "}";
+    }
 }
 
 public class Typ
@@ -63,6 +103,11 @@ public class Typ
     public int type_id { get; set; }
     public string type_name { get; set; }
     public ICollection<CarPark> conParksT { get; set; }
+
+    public override string ToString()
+    {
+        return "{id: " + type_id + ",name: " + type_name + "}";
+    }
 }
 
 public class FreePark
@@ -73,4 +118,9 @@ public class FreePark
     public int day { get; set; }
     public string start_time { get; set; }
     public string end_time { get; set; }
+
+    public override string ToString()
+    {
+        return "{id: " + free_park_instance_id + ",day: " + day + ",start: " + start_time + ",end: " + end_time + "}";
+    }
 }

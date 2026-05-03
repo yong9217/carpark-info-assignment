@@ -204,13 +204,6 @@ class ParseCSV
 
             foreach (int d in days)
             {
-                Console.Write(d);
-            }
-            Console.Write("\n");
-            Console.WriteLine(tr);
-
-            foreach (int d in days)
-            {
                 output.Add(new FreeSession
                 {
                     day = d,
