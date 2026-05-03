@@ -2,13 +2,15 @@
 
 public class DatabaseConnector
 {
+    //Import database structure
     public ParkingContext db = new ParkingContext();
 
     public DatabaseConnector()
     {
-        Console.WriteLine($"Database path: {db.DbPath}.");
+        Console.WriteLine($"Database path: {db.DbPath}."); //Report database file path
     }
 
+    //Getter functions for the user stories
     public CarPark[] getFreeParking()
     {
         var res = db.CARPARK.Include(x => x.LotTypes).Include(y => y.ParkingSystems).Include(z => z.FreeParkingSessions).Where(z => z.FreeParkingSessions.Count > 0);
@@ -30,63 +32,8 @@ public class DatabaseConnector
         return res.ToArray();
     }
 
-    public void printSystem()
-    {
-        var res = db.SYSTEM;
-        foreach (Sys x in res)
-        {
-            Console.WriteLine(x.system_name);
-        }
-    }
-
-    public async Task SeedDb()
-    {
-        Sys system1 = new Sys
-        {
-            system_id = 1,
-            system_name = "testS"
-        };
-        
-        Typ type1 = new Typ
-        {
-            type_id = 1,
-            type_name = "testT"
-        };
-
-        CarPark cp1 = new CarPark
-        {
-            car_park_no = "A1",
-            night_parking = true,
-            gantry_height = 3.5F,
-            ParkingSystems = [system1],
-            LotTypes = [type1],
-
-            address = "",
-            x_coord = 0F,
-            y_coord = 0F,
-            short_term_end = "",
-            short_term_start = "",
-            decks = 0,
-            basement = false
-        };
-
-        FreePark fp1 = new FreePark
-        {
-            free_park_instance_id = 1,
-            day = 0,
-            start_time = "",
-            end_time = "",
-            car_park_noFP = cp1
-        };
-
-        db.Add(system1);
-        db.Add(type1);
-        db.Add(cp1);
-        db.Add(fp1);
-
-        await db.SaveChangesAsync();
-    }
-
+    //Convert a Lot into a CarPark
+    //Different object formats are used as CarPark has circular references due to parking system, lot type and free parking periods which HTTPClient does not like
     private CarPark LotToCarPark(Lot l)
     {
         CarPark output = new CarPark
@@ -109,6 +56,8 @@ public class DatabaseConnector
         return output;
     }
 
+    //Process all lot types in Lot to lot types in CarPark
+    //Will automatically add missing lots not found in the database
     private ICollection<Typ> TypesToLotTypes(string[] xs)
     {
         ICollection<Typ> output = new List<Typ>{};
@@ -133,6 +82,8 @@ public class DatabaseConnector
         return output;
     }
 
+    //Process all system types in Lot to system types in CarPark
+    //Will automatically add missing systems not found in the database
     private ICollection<Sys> SystemsToSys(string[] xs)
     {
         ICollection<Sys> output = new List<Sys>{};
@@ -156,6 +107,8 @@ public class DatabaseConnector
         return output;
     }
 
+    //Process all free parking periods in Lot to free parking periods in CarPark
+    //Will automatically add missing free parking periods not found in the database
     private ICollection<FreePark> FreeSessionsToFreePark(FreeSession[] xs, CarPark source)
     {
         ICollection<FreePark> output = new List<FreePark>{};
@@ -189,16 +142,17 @@ public class DatabaseConnector
         return output;
     }
 
+    //Sync a single lot from the CSV with the database
     private void syncSingleLotWithCSV(Lot l)
     {
         var res = db.CARPARK.Where(m => m.car_park_no == l.car_park_no);
         
-        if(res.Count() <= 0)
+        if(res.Count() <= 0) //Lot does not exist in database, have to add
         {
             Console.WriteLine("Adding...");
             db.CARPARK.Add(LotToCarPark(l));
 
-        } else
+        } else //Lot does exist in database, update instead
         {
             Console.WriteLine("Updating...");
             updateToCSV(l, res.First());
@@ -207,6 +161,7 @@ public class DatabaseConnector
         db.SaveChanges();
     }
 
+    //Perform the heavy work of matching the CSV with the database
     private void updateToCSV(Lot l, CarPark cp)
     {
         //skip car_park_no
@@ -220,10 +175,12 @@ public class DatabaseConnector
         cp.night_parking = l.night_parking;
         cp.gantry_height = l.gantry_height;
         
+        //Have to run includes from database otherwise types, systems and free parking won't be loaded
         var loadTypeIncl = db.CARPARK.Include(z => z.LotTypes).Where(x => x.car_park_no == cp.car_park_no);
         var loadSystemIncl = db.CARPARK.Include(z => z.ParkingSystems).Where(x => x.car_park_no == cp.car_park_no);
         var loadFreeIncl = db.CARPARK.Include(z => z.FreeParkingSessions).Where(x => x.car_park_no == cp.car_park_no);
 
+        //Make a copy of types, systems and free parking from database
         List<string> loadTypes = new List<string>{};
         List<string> loadSystems = new List<string>{};
         List<FreeSession> loadFrees = new List<FreeSession>{};
@@ -249,13 +206,15 @@ public class DatabaseConnector
             });
         }
 
+        //Parse the version in the CSV
         var csvTypes = TypesToLotTypes(l.types);
         var csvSystems = SystemsToSys(l.systems);
         var csvFree = FreeSessionsToFreePark(l.free, cp);
 
+        //Match the database with the CSV
         foreach (var item in csvTypes)
         {
-            if (!loadTypes.Contains(item.type_name))
+            if (!loadTypes.Contains(item.type_name)) //CSV has something the database does not. Have to add
             {
                 cp.LotTypes.Add(item);
             }
@@ -293,6 +252,7 @@ public class DatabaseConnector
         }
     }
 
+    //Helper function to add a lot type to the database
     private Typ addType(string t, int init)
     {
 
@@ -307,6 +267,7 @@ public class DatabaseConnector
         return newTyp;
     }
 
+    //Helper function to add a system to the database
     private Sys addSystem(string t, int init)
     {
         Sys newSys = new Sys
@@ -320,6 +281,7 @@ public class DatabaseConnector
         return newSys;
     }
 
+    //Intermediate function that sets up the rollback in case anything goes wrong
     private void sync(List<Lot> ls)
     {
         using (var trans = db.Database.BeginTransaction())
@@ -337,11 +299,13 @@ public class DatabaseConnector
         }
     }
 
+    //Main entry point
     public void syncWithCSV(string path)
     {
         sync(ParseCSV.ReadFile(path));
     }
 
+    //Helper function to log array during debugging
     public string ColToString<T>(ICollection<T> x)
     {
         if(x == null)
@@ -366,6 +330,7 @@ public class DatabaseConnector
         return output;
     }
 
+    //Static function to convert CarParks (records from database) to versions acceptable for API requests
     public static Lot CarParkToLot(CarPark p)
     {
         List<string> types = new List<string>{};

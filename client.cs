@@ -4,12 +4,24 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Text.Json;
 
+//Proxy for a client making API calls
 class Client
 {
-    public static async Task Start()
+    private int port;
+    public Client(int p)
     {
+        port = p;
+    }
+
+    public async Task Start()
+    {
+        //Make a call to each of the APIs
+
+        //Parameter that sets the value requested by the client for gantry height
+        double height = 3.2;
+
         var client = new HttpClient();
-        var response = await client.GetAsync("http://localhost:5050/FreeParking");
+        var response = await client.GetAsync($"http://localhost:{port}/FreeParking");
         // Check if the request was successful
         if (response.IsSuccessStatusCode)
         {
@@ -17,6 +29,7 @@ class Client
 
             while(responseJson == null){}
 
+            //Log the received result from the API to console
             Console.WriteLine("Requested Free Parking");
             foreach (Lot cp in responseJson)
             {
@@ -28,7 +41,7 @@ class Client
             Console.WriteLine("Request was unsuccessful");
         }
 
-        response = await client.GetAsync("http://localhost:5050/NightParking");
+        response = await client.GetAsync($"http://localhost:{port}/NightParking");
         if (response.IsSuccessStatusCode)
         {
             var responseJson = await response.Content.ReadFromJsonAsync<List<Lot>>();
@@ -47,8 +60,7 @@ class Client
             Console.WriteLine("Request was unsuccessful");
         }
 
-        double height = 3.2;
-        response = await client.GetAsync("http://localhost:5050/gantry/height/" + height);
+        response = await client.GetAsync($"http://localhost:{port}/gantry/height/" + height);
         if (response.IsSuccessStatusCode)
         {
             var responseJson = await response.Content.ReadFromJsonAsync<List<Lot>>();

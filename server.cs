@@ -7,7 +7,7 @@ public class HttpListenerServer
     private readonly HttpListener _listener;
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly Dictionary<string, Func<HttpListenerContext, Task>> _routes;
-    private DatabaseConnector _con;
+    private DatabaseConnector _con; //The database connection to get data from
 
     public HttpListenerServer(string[] prefixes, DatabaseConnector con)
     {
@@ -30,7 +30,7 @@ public class HttpListenerServer
         // GET routes
         _routes["GET /FreeParking"] = HandleFreeParking;
         _routes["GET /NightParking"] = HandleNightParking;
-        _routes["GET /gantry/height/{h}"] = HandleGantryHeight;
+        _routes["GET /gantry/height/{height}"] = HandleGantryHeight;
     }
 
     public async Task StartAsync()
@@ -125,6 +125,7 @@ public class HttpListenerServer
         }
     }
 
+    //Parameterized routes are handled separately
     private bool IsParameterizedRoute(HttpListenerRequest request, out Func<HttpListenerContext, Task> handler)
     {
         handler = null;
@@ -143,8 +144,7 @@ public class HttpListenerServer
     private void AddCorsHeaders(HttpListenerResponse response)
     {
         response.Headers.Add("Access-Control-Allow-Origin", "*");
-        response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        response.Headers.Add("Access-Control-Allow-Methods", "GET");
     }
 
     // Route Handlers
@@ -160,13 +160,15 @@ public class HttpListenerServer
         await WriteJsonResponse(context.Response, lots);
     }
 
+    ////Handlers for the various GET calls
+
     private async Task HandleNightParking(HttpListenerContext context)
     {
         List<Lot> lots = new List<Lot>{};
 
         foreach (CarPark cp in _con.getNightParking())
         {
-            lots.Add(DatabaseConnector.CarParkToLot(cp));
+            lots.Add(DatabaseConnector.CarParkToLot(cp)); //Have to convert to non-circular reference
         }
 
         await WriteJsonResponse(context.Response, lots);
@@ -189,7 +191,7 @@ public class HttpListenerServer
         var path = context.Request.Url.LocalPath;
         var segments = path.Split('/');
         
-        if (segments.Length >= 4 && double.TryParse(segments[3], out double height))
+        if (segments.Length >= 4 && double.TryParse(segments[3], out double height)) //attempt to read a double in the 4th segment (localhos/<port> : 1st/gantry : 2nd/height : 3rd/<height> : 4th)
         {
             List<Lot> lots = new List<Lot>{};
 

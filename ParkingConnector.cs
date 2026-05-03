@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
+//Setup the database structure
 public class ParkingContext : DbContext
 {
     //Tables
@@ -13,14 +14,15 @@ public class ParkingContext : DbContext
 
     public ParkingContext()
     {
-        DbPath = "C:\\Users\\yong9\\Documents\\node\\carpark-info-assignment\\sqlite\\parkingTest.db";
+        DbPath = "C:\\Users\\yong9\\Documents\\node\\carpark-info-assignment\\sqlite\\parking.db";
     }
 
+    //Use sqlite to manipulate database
     protected override void OnConfiguring(DbContextOptionsBuilder options){
         options.UseSqlite($"Data Source={DbPath}");
-        options.EnableSensitiveDataLogging();
     }
 
+    //Setup relationships on creation
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<FreePark>().HasOne(c => c.car_park_noFP).WithMany(t => t.FreeParkingSessions);
@@ -50,6 +52,7 @@ public class CarPark
     [ForeignKey("type_id")]
     public ICollection<Typ> LotTypes { get; set; }
 
+    //Custom ToString for easier debugging
     public override string ToString()
     {
         string output = $"[car_park_no: {this.car_park_no}, address: {this.address}, x_coord: {this.x_coord}, y_coord: {this.y_coord}, short_term_start: {this.short_term_start}, short_term_end: {this.short_term_end}, night_parking: {this.night_parking}, decks: {this.decks}, gantry_height: {this.gantry_height}, basement: {this.basement}, ";
@@ -91,6 +94,7 @@ public class Sys
     public string system_name { get; set; }
     public ICollection<CarPark> conParksS { get; set; }
 
+    //Custom ToString for easier debugging
     public override string ToString()
     {
         return "{id: " + system_id + ",name: " + system_name + "}";
@@ -104,6 +108,7 @@ public class Typ
     public string type_name { get; set; }
     public ICollection<CarPark> conParksT { get; set; }
 
+    //Custom ToString for easier debugging
     public override string ToString()
     {
         return "{id: " + type_id + ",name: " + type_name + "}";
@@ -119,6 +124,7 @@ public class FreePark
     public string start_time { get; set; }
     public string end_time { get; set; }
 
+    //Custom ToString for easier debugging
     public override string ToString()
     {
         return "{id: " + free_park_instance_id + ",day: " + day + ",start: " + start_time + ",end: " + end_time + "}";

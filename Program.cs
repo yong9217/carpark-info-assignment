@@ -2,11 +2,16 @@ class Program
 {
     public static async Task Main(string[] args)
     {
+        //Setup parameters
+        int port = 5050;
+        string path = "hdb-carpark-information-20220824010400.csv";
         DatabaseConnector con = new DatabaseConnector();
-        string[] prefixes = {"http://localhost:5050/"};
+        string[] prefixes = {$"http://localhost:{port}/"};
         HttpListenerServer server = new HttpListenerServer(prefixes,con);
-        bool testCSVParser = false;
-        bool testCSVAdd = false;
+        float height = 3.21F; //Set to change what height function calls (different from the value the API calls, go to client.cs to change that value)
+        bool testCSVParser = true; //Set to test the Parser works by updating the database / creating if it does not exist
+        bool testCSVAdd = true;    //Set to test the Parser can create and initialize the database by deleting it prior
+        bool startAPI = false;     //Set to test the API calls
 
         if (testCSVParser)
         {
@@ -14,16 +19,15 @@ class Program
             {
                 await con.db.Database.EnsureDeletedAsync();
             }
-            
-            string path = "testSection.csv";
+            await con.db.Database.EnsureCreatedAsync();
             List<Lot> fromCSV = ParseCSV.ReadFile(path);
 
             Console.WriteLine("Updating " + fromCSV.Count + " records from " + path + "...");
             con.syncWithCSV(path);
             Console.WriteLine("Done!");
         }
-        await con.db.Database.EnsureCreatedAsync();
-
+    
+        //Showing the API calls
         Console.WriteLine("Parking Lots with free parking:");
         foreach (CarPark i in con.getFreeParking())
         {
@@ -38,7 +42,6 @@ class Program
         }
         Console.WriteLine();
 
-        float height = 3.21F;
         Console.WriteLine($"Parking Lots which vehicles of height {height} can enter:");
         foreach (CarPark i in con.getMatchHeight(height))
         {
@@ -46,35 +49,38 @@ class Program
         }
         Console.WriteLine();
 
-        //Startup http server
-        Console.WriteLine("Starting HTTP Server...");
-        Console.WriteLine("Press 'q' to quit");
-
-        // Start server in background
-        var serverTask = server.StartAsync();
-        var clientTask = Client.Start();
-
-        // Wait for quit command
-        while (true)
+        if (startAPI)
         {
-            var key = Console.ReadKey(true);
-            if (key.KeyChar == 'q' || key.KeyChar == 'Q')
-                break;
-        }
+            //Startup http server
+            var serverTask = server.StartAsync();
+            var clientTask = new Client(port);
+            await clientTask.Start();
 
-        Console.WriteLine("Stopping server...");
-        server.Stop();
+            Console.WriteLine("Starting HTTP Server...");
+            Console.WriteLine("Press 'q' to quit");
 
-        try
-        {
-            await serverTask;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Server stopped with an exception."+ex.Message);
-        }
+            // Wait for quit command
+            while (true)
+            {
+                var key = Console.ReadKey(true);
+                if (key.KeyChar == 'q' || key.KeyChar == 'Q')
+                    break;
+            }
 
-        Console.WriteLine("Server stopped.");
+            Console.WriteLine("Stopping server...");
+            server.Stop();
+
+            try
+            {
+                await serverTask;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Server stopped with an exception."+ex.Message);
+            }
+
+            Console.WriteLine("Server stopped.");
+        }
     }
 }
 

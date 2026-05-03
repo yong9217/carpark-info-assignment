@@ -1,0 +1,141 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Carpark-Info-Assignment",
+        "version": "v1"
+    },
+    "paths": {
+        "/FreeParking":{
+            "get": {
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "type": "array",
+                                "items": {
+                                    "ref": "#/components/schema/Lot"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/NightParking":{
+            "get": {
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "type": "array",
+                                "items": {
+                                    "ref": "#/components/schema/Lot"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/gantry/height/{height}": {
+            "get": {
+                "parameters": [{
+                    "in": "path",
+                    "name": "height",
+                    "schema": {
+                        "type": "double",
+                        "required": "true"
+                    }
+                }],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "type": "array",
+                                "items": {
+                                    "ref": "#/components/schema/Lot"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Lot": {
+                "type": "object",
+                "properties": {
+                    "car_park_no": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "x_coord": {
+                        "type": "float"
+                    },
+                    "y_coord": {
+                        "type": "float"
+                    },
+                    "short_term_start": {
+                        "type": "string"
+                    },
+                    "short_term_end": {
+                        "type": "string"
+                    },
+                    "night_parking": {
+                        "type": "bool"
+                    },
+                    "decks": {
+                        "type": "int"
+                    },
+                    "gantry_height": {
+                        "type": "float"
+                    },
+                    "basement": {
+                        "type": "bool"
+                    },
+                    "types": {
+                        "type": "array",
+                        "items": {
+                            "ref": "#/components/schema/FreeSession"
+                        }
+                    },
+                    "systems": {
+                        "type": "array",
+                        "items": {
+                            "ref": "#/components/schema/FreeSession"
+                        }
+                    },
+                    "free": {
+                        "type": "array",
+                        "items": {
+                            "ref": "#/components/schema/FreeSession"
+                        }
+                    }
+                }
+            },
+            "FreeSession": {
+                "type": "object",
+                "properties": {
+                    "day": {
+                        "type": "int"
+                    },
+                    "session": {
+                        "type": "object",
+                        "Properties": {
+                            "start": {
+                                "type": "string"
+                            },
+                            "end": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
