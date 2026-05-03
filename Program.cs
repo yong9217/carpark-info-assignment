@@ -1,4 +1,6 @@
-﻿class DatabaseConnector
+﻿using Microsoft.EntityFrameworkCore;
+
+class DatabaseConnector
 {
     public ParkingContext db = new ParkingContext();
 
@@ -11,7 +13,7 @@
     {
         DatabaseConnector con = new DatabaseConnector();
 
-        // await con.db.Database.EnsureDeletedAsync();
+        // await con.db.Database.EnsureDeletedAsync(); 
         await con.db.Database.EnsureCreatedAsync();
 
         // using (var trans = con.db.Database.BeginTransaction())
@@ -230,8 +232,7 @@
         if(res.Count() <= 0)
         {
             Console.WriteLine("Adding...");
-            var x = LotToCarPark(l);
-            db.CARPARK.Add(x);
+            db.CARPARK.Add(LotToCarPark(l));
 
         } else
         {
@@ -255,24 +256,77 @@
         cp.night_parking = l.night_parking;
         cp.gantry_height = l.gantry_height;
         
+        var loadTypeIncl = db.CARPARK.Include(z => z.LotTypes).Where(x => x.car_park_no == cp.car_park_no);
+        var loadSystemIncl = db.CARPARK.Include(z => z.ParkingSystems).Where(x => x.car_park_no == cp.car_park_no);
+        var loadFreeIncl = db.CARPARK.Include(z => z.FreeParkingSessions).Where(x => x.car_park_no == cp.car_park_no);
 
-        // cp.LotTypes = TypesToLotTypes(l.types);
-        var x = TypesToLotTypes(l.types);
+        List<string> loadTypes = new List<string>{};
+        List<string> loadSystems = new List<string>{};
+        List<FreeSession> loadFrees = new List<FreeSession>{};
 
-        foreach (var item in cp.LotTypes)
+        foreach (var item in loadTypeIncl.First().LotTypes)
         {
-            Console.WriteLine(item);
+            loadTypes.Add(item.type_name);
         }
-        Console.WriteLine("---------------------------------");
-        foreach (var item in x)
+        foreach (var item in loadSystemIncl.First().ParkingSystems)
         {
-            Console.WriteLine(item);
+            loadSystems.Add(item.system_name);
+        }
+        foreach (var item in loadFreeIncl.First().FreeParkingSessions)
+        {
+            loadFrees.Add(new FreeSession
+            {
+                day = item.day,
+                session = new TimeRange
+                {
+                    start = item.start_time,
+                    end = item.end_time
+                }
+            });
         }
 
-        cp.ParkingSystems = SystemsToSys(l.systems);
-        cp.FreeParkingSessions = FreeSessionsToFreePark(l.free,cp);
+        var csvTypes = TypesToLotTypes(l.types);
+        var csvSystems = SystemsToSys(l.systems);
+        var csvFree = FreeSessionsToFreePark(l.free, cp);
 
-        
+        foreach (var item in csvTypes)
+        {
+            if (!loadTypes.Contains(item.type_name))
+            {
+                cp.LotTypes.Add(item);
+            }
+        }
+        foreach (var item in csvSystems)
+        {
+            if (!loadSystems.Contains(item.system_name))
+            {
+                cp.ParkingSystems.Add(item);
+            }
+        }
+
+        var total = db.FREE_PARK.Count();
+        foreach (var item in csvFree)
+        {
+            //"Contains" but with different equality conditions (ie that the free parking day, start and end are the same)
+            bool match = false;
+            foreach (var q in loadFrees)
+            {
+                match = match || (q.day == item.day && q.session.start == item.start_time && q.session.end == item.end_time);
+            }
+
+            if (!match)
+            {
+                total = total + 1;
+
+                db.FREE_PARK.Add(new FreePark
+                {
+                    free_park_instance_id = total,
+                    day = item.day,
+                    start_time = item.start_time,
+                    end_time = item.end_time
+                }); 
+            }
+        }
     }
 
     private Typ addType(string t, int init)
