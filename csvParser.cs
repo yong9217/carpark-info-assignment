@@ -18,7 +18,7 @@ class RawLot
     public string? car_park_basement { get; set; }
 }
 
-class Lot
+public class Lot
 {
     public string car_park_no { get; set; }
     public string address { get; set; }
@@ -68,7 +68,7 @@ class Lot
     }
 }
 
-class FreeSession
+public class FreeSession
 {
     public int day { get; set; }
     public TimeRange session { get; set; }
@@ -79,7 +79,7 @@ class FreeSession
     }
 }
 
-class TimeRange
+public class TimeRange
 {
     public string start { get; set; }
     public string end { get; set; }
